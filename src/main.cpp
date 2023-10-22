@@ -55,7 +55,7 @@ class $modify(CustomSongLayer) {
 			return;
 		}
 
-		int songID = rand() % 1200000;
+		int songID = std::rand() % 1200000;
 		web::AsyncWebRequest()
 			.postRequest()
 			.postFields(fmt::format("songID={}&secret=Wmfd2893gb7", songID))
