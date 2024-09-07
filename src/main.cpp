@@ -1,4 +1,4 @@
-#include "Geode/ui/BasedButtonSprite.hpp"
+#include <Geode/ui/BasedButtonSprite.hpp>
 #include <Geode/Geode.hpp>
 #include <Geode/utils/web.hpp>
 #include <Geode/modify/CustomSongLayer.hpp>
@@ -8,11 +8,13 @@ using namespace geode::prelude;
 
 
 class $modify(CustomSongLayer) {
-	CCMenuItemSpriteExtra* m_randBtn;
-	LoadingCircle* m_loadCircle;
+	struct Fields {
+		CCMenuItemSpriteExtra* m_randBtn;
+		LoadingCircle* m_loadCircle;
+	};
 
-	bool init(LevelSettingsObject* lso) {
-		if (!CustomSongLayer::init(lso)) return false;
+	bool init(CustomSongDelegate* del) {
+		if (!CustomSongLayer::init(del)) return false;
 
 		Build(CircleButtonSprite::create(CCSprite::create("dice.png"_spr), CircleBaseColor::Pink))
 			.scale(0.8)
@@ -28,9 +30,8 @@ class $modify(CustomSongLayer) {
 				findRandomSong();
 			})
 			.store(m_fields->m_randBtn)
-			.pos(170, -20)
-			.intoNewParent(CCMenu::create())
-			.parent(m_mainLayer);
+			.pos(390, -155)
+			.parent(m_buttonMenu);
 
 		Build<LoadingCircle>::create()
 			.store(m_fields->m_loadCircle)
@@ -55,13 +56,17 @@ class $modify(CustomSongLayer) {
 			return;
 		}
 
-		int songID = (rand() * rand()) % 1200000;
-		web::AsyncWebRequest()
-			.postRequest()
-			.postFields(fmt::format("songID={}&secret=Wmfd2893gb7", songID))
-			.fetch("http://www.boomlings.com/database/getGJSongInfo.php")
-			.text()
-			.then([=](std::string const& text) {
+		unsigned int songID = ((uint32_t)rand() * (uint32_t)rand()) % 1200000;
+		web::WebRequest()
+			.bodyString(fmt::format("songID={}&secret=Wmfd2893gb7", songID))
+			.post("https://www.boomlings.com/database/getGJSongInfo.php")
+			.listen([=](web::WebResponse* response) {
+				if (response->code() != 200) {
+					FLAlertLayer::create("Timed Out", "Could not connect to the server. Please try again later.", "OK")->show();
+					return;
+				}
+
+				auto text = response->string().unwrapOr("-1");
 				if (text[0] == '-') {
 					findRandomSong();
 				} else {
