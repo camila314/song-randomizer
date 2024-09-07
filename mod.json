@@ -10,6 +10,7 @@
 	"name": "Song Randomizer",
 	"developer": "camila314",
 	"description": "Adds a random song button to the song selection menu.",
+	"tags": ["music"],
 	"resources": {
 		"sprites": [
 			"images/dice.png"
